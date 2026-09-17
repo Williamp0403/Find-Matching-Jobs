@@ -59,24 +59,32 @@ export class JobsController {
     return { provider: 'jsearch', ...result };
   }
 
+  @Get('cron-sync')
+  @Post('cron-sync')
+  @UseGuards() // Sobrescribe el guard a nivel de controlador: sin JWT
+  @ApiOperation({ summary: 'Vercel Cron: sincronización semanal de vacantes' })
+  async cronSync(
+    @Headers('authorization') authHeader?: string,
+    @Headers('user-agent') userAgent?: string,
+  ) {
+    const secret = process.env.CRON_SECRET;
+    const isVercelCron = userAgent && userAgent.includes('vercel-cron');
+    const isSecretValid = secret && authHeader === `Bearer ${secret}`;
+
+    // Si se definió CRON_SECRET en el entorno, validamos el token o la procedencia de Vercel Cron
+    if (secret && !isSecretValid && !isVercelCron) {
+      throw new UnauthorizedException('Invalid cron secret');
+    }
+
+    await this.jobsCronService.weeklySync();
+    return { ok: true, message: 'Cron sync iniciado correctamente' };
+  }
+
   @Get(':id')
   findOne(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
   ) {
     return this.jobsService.findOne(id, user.userId);
-  }
-
-  @Post('cron-sync')
-  @UseGuards() // Sobrescribe el guard a nivel de controlador: sin JWT
-  @ApiOperation({ summary: 'Vercel Cron: sincronización semanal de vacantes' })
-  async cronSync(@Headers('authorization') authHeader: string) {
-    const secret = process.env.CRON_SECRET;
-    const expected = `Bearer ${secret}`;
-    if (!secret || authHeader !== expected) {
-      throw new UnauthorizedException('Invalid cron secret');
-    }
-    await this.jobsCronService.weeklySync();
-    return { ok: true, message: 'Cron sync iniciado correctamente' };
   }
 }
