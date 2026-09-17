@@ -1,0 +1,5 @@
+{
+  "version": 2,
+  "buildCommand": "pnpm --filter @find-matching-jobs/types build && next build",
+  "installCommand": "pnpm install"
+}
