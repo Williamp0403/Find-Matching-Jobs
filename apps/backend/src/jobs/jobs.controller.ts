@@ -6,6 +6,8 @@ import {
   Query,
   UseGuards,
   ParseIntPipe,
+  Headers,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ApiOperation, ApiTags } from '@nestjs/swagger';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -15,6 +17,7 @@ import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import type { JwtPayload } from '../auth/interfaces/jwt-payload.interface';
 import { JsearchService } from '../jsearch/jsearch.service';
 import { JobsService } from './jobs.service';
+import { JobsCronService } from './jobs-cron.service';
 import { SearchJobsDto, UserRole } from '@find-matching-jobs/types';
 import { JobsFilterDto } from './dto/jobs-filter.dto';
 
@@ -25,6 +28,7 @@ export class JobsController {
   constructor(
     private readonly jobsService: JobsService,
     private readonly jsearchService: JsearchService,
+    private readonly jobsCronService: JobsCronService,
   ) {}
 
   @Get()
@@ -61,5 +65,18 @@ export class JobsController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.jobsService.findOne(id, user.userId);
+  }
+
+  @Post('cron-sync')
+  @UseGuards() // Sobrescribe el guard a nivel de controlador: sin JWT
+  @ApiOperation({ summary: 'Vercel Cron: sincronización semanal de vacantes' })
+  async cronSync(@Headers('authorization') authHeader: string) {
+    const secret = process.env.CRON_SECRET;
+    const expected = `Bearer ${secret}`;
+    if (!secret || authHeader !== expected) {
+      throw new UnauthorizedException('Invalid cron secret');
+    }
+    await this.jobsCronService.weeklySync();
+    return { ok: true, message: 'Cron sync iniciado correctamente' };
   }
 }

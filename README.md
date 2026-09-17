@@ -1,118 +1,131 @@
-# Plan de Desarrollo: Sistema Web de Matching Laboral (UNEFA)
+# 💼 Find Matching Jobs - Sistema Inteligente de Matching Laboral
 
-**Equipo**: 4 integrantes (2 Backend, 2 Frontend)
-**Stack**: NestJS, NextJS, PostgreSQL, JSearch API, IA (Matching)
-**Duración**: 8 Semanas
+> Plataforma Full-Stack para conectar perfiles de estudiantes y profesionales con ofertas laborales de la industria de TI mediante un **algoritmo de recomendación y matching por compatibilidad técnica**.
+
+[![Next.js](https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js)](https://nextjs.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-11-red?style=flat-square&logo=nestjs)](https://nestjs.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Neon_DB-336791?style=flat-square&logo=postgresql)](https://neon.tech/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-06B6D4?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=flat-square&logo=vercel)](https://vercel.com/)
 
 ---
 
-## Estructura del Repositorio (Monorepo Recomendado)
+## 🚀 Demostración en Vivo
+
+- 🌐 **Aplicación Web**: [find-matching-jobs-frontend-delta.vercel.app](https://find-matching-jobs-frontend-delta.vercel.app)
+
+---
+
+## 📖 Tabla de Contenidos
+
+1. [Descripción General](#-descripción-general)
+2. [Características Principales](#-características-principales)
+3. [Arquitectura del Monorepo](#-arquitectura-del-monorepo)
+4. [Tech Stack](#-tech-stack)
+5. [Modelo de Datos](#-modelo-de-datos)
+6. [Instalación y Configuración Local](#-instalación-y-configuración-local)
+7. [Variables de Entorno](#-variables-de-entorno)
+
+---
+
+## 🧐 Descripción General
+
+**Find Matching Jobs** es una aplicación Full-Stack desarrollada en una arquitectura de **Monorepo en TypeScript** (`pnpm workspaces`). Su objetivo es simplificar la búsqueda de empleo para desarrolladores y estudiantes de tecnología al emparejar sus habilidades reales con vacantes del mercado laboral.
+
+El sistema consume vacantes en tiempo real a través de **JSearch API** (RapidAPI) y las evalúa contra el perfil del usuario mediante un **algoritmo de compatibilidad técnica** (*Match Score 0-100%*), identificando brechas de conocimiento (*missing skills*) y generando justificaciones detalladas para cada recomendación.
+
+---
+
+## ✨ Características Principales
+
+- 🔐 **Autenticación Segura**: Registro e inicio de sesión con encriptación `bcrypt`, tokens JWT y protección Rate Limiting (`Throttler`).
+- 👤 **Perfil Técnico Personalizado**: Configuración de habilidades (Frontend, Backend, DB, DevOps), niveles de experiencia (Básico, Intermedio, Avanzado) y modalidades preferidas.
+- 🤖 **Algoritmo de Matching Ponderado**: Comparación entre requerimientos de vacantes y perfil del usuario para calcular compatibilidad técnica y sugerir tecnologías por aprender.
+- 🔄 **Sincronización Automatizada**: Tarea programada mediante Vercel Cron Jobs para renovar la base de datos con vacantes de TI de los últimos 30 días.
+- 📊 **Panel Administrativo**: Métricas del sistema y control global de usuarios y vacantes.
+- 📘 **API REST Documentada**: Endpoints documentados dinámicamente con Swagger / OpenAPI.
+
+---
+
+## 🏗️ Arquitectura del Monorepo
+
 ```
 find-matching-jobs/
 ├── apps/
-│   ├── backend/    (NestJS)
-│   └── frontend/   (NextJS)
-├── packages/
-│   └── types/      (DTOs compartidos)
-└── package.json
+│   ├── backend/               # API REST con NestJS, TypeORM, PostgreSQL y Swagger
+│   └── frontend/              # App Web en Next.js 16 (App Router), Tailwind CSS y Zustand
+└── packages/
+    └── types/                 # Paquete TypeScript compartido (DTOs e Interfaces)
 ```
 
 ---
 
-## Agent Skills (Herramientas de Desarrollo)
+## 🛠️ Tech Stack
 
-### NestJS (Backend)
-- **TypeScript**: Tipado estático y decoradores.
-- **NestJS CLI**: `nest generate` para módulos, controladores, servicios.
-- **TypeORM/Prisma**: ORM para PostgreSQL.
-- **Passport/JWT**: Estrategia de autenticación.
-- **class-validator**: Validación de DTOs.
-- **Axios**: Consumo de JSearch API.
-- **Swagger**: Documentación de endpoints (`@nestjs/swagger`).
-- **Jest**: Pruebas unitarias.
-
-### NextJS (Frontend)
-- **TypeScript**: Tipado para componentes y props.
-- **App Router**: Enrutamiento basado en carpetas (Next.js 13+).
-- **Tailwind CSS**: Estilizado rápido y responsivo.
-- **Axios**: Consumo de API del backend.
-- **React Hook Form**: Manejo de formularios y validación.
-- **Zustand**: Gestión de estado ligera (o Context API).
-- **SWR/React Query**: Fetching y caché de datos (opcional).
+- **Frontend**: Next.js 16, React 19, TypeScript, Tailwind CSS v4, Zustand, React Hook Form, Lucide Icons.
+- **Backend**: NestJS 11, TypeScript, TypeORM, PostgreSQL (Neon DB), Passport JWT, Bcrypt, Helmet, Throttler, Swagger.
+- **Infraestructura**: Vercel (Frontend & Serverless Functions), RapidAPI (JSearch), PNPM Workspaces.
 
 ---
 
-## Modelo de Datos (PostgreSQL)
+## 📊 Modelo de Datos (PostgreSQL)
 
-| Tabla | Campos Principales |
-|-------|-------------------|
-| **Users** | `id` (PK), `nombre`, `apellido`, `email`, `password`, `rol` (estudiante/admin) |
-| **Profiles** | `id` (PK), `user_id` (FK), `resumen_profesional`, `semestre`, `modalidad_preferida`, `github_url`, `linkedin_url` |
-| **Skills** | `id` (PK), `nombre` (React, Node.js), `categoria` (Frontend/Backend/DB) |
-| **Student_Skills** | `student_id` (FK), `skill_id` (FK), `nivel` (Básico/Intermedio/Avanzado) |
-| **Jobs** | `id` (PK), `external_id` (JSearch), `titulo`, `empresa`, `descripcion`, `ubicacion`, `url_postulacion`, `fecha_publicacion` |
-| **Match_Results** | `id` (PK), `student_id` (FK), `job_id` (FK), `score` (0-100), `justificacion_ia`, `missing_skills`, `fecha_analisis` |
-
----
-
-## Cronograma de 8 Semanas
-
-### Semana 1: Setup y Base de Datos
-- [ ] Definir esquema final en PostgreSQL (TypeORM/Prisma).
-- [ ] Configurar Monorepo: `backend/` (NestJS) y `frontend/` (NextJS).
-- [ ] Instalar dependencias base en ambos proyectos.
-- [ ] Configurar PostgreSQL local o Supabase/Neon.
-
-### Semana 2: Autenticación y Perfiles (Backend)
-- [ ] **Backend**: Módulo `Auth` (Registro, Login, JWT).
-- [ ] **Backend**: Módulos `Users` y `Profiles` (CRUD).
-- [ ] **Frontend**: Páginas de Login y Registro.
-- [ ] **Frontend**: Contexto de autenticación (Zustand/Context).
-
-### Semana 3: Habilidades y Vacantes (Backend)
-- [ ] **Backend**: Módulo `Skills` y relación `Student_Skills`.
-- [ ] **Backend**: Servicio de ingesta JSearch API -> Tabla `Jobs`.
-- [ ] **Frontend**: Página de edición de perfil (Skills con niveles).
-
-### Semana 4: Matching Inteligente (Backend)
-- [ ] **Backend**: Lógica de comparación (Perfil vs Vacante).
-- [ ] **Backend**: Generación de `score` y `justificacion_ia` (OpenAI/Lógica Difusa).
-- [ ] **Backend**: Endpoint para obtener `Match_Results`.
-- [ ] **Frontend**: Página de visualización de Matches (Score y justificación).
-
-### Semana 5: Listado de Vacantes (Frontend)
-- [ ] **Frontend**: Página de listado de `Jobs` con filtros (ubicación, modalidad).
-- [ ] **Frontend**: Página de detalle de vacante.
-- [ ] **Frontend**: Integración completa con API de Backend (Axios).
-
-### Semana 6: Panel de Administrador y Ajustes
-- [ ] **Backend**: Endpoint de estadísticas para admin.
-- [ ] **Frontend**: Panel de administrador (Gestión de usuarios/vacantes).
-- [ ] Ajustes de UI/UX y manejo de errores globales.
-
-### Semana 7: Pruebas e Integración
-- [ ] **Backend**: Pruebas unitarias con Jest en servicios críticos.
-- [ ] **Frontend**: Pruebas de flujo completo (Registro -> Perfil -> Match).
-- [ ] Corrección de bugs y validaciones faltantes.
-
-### Semana 8: Despliegue y Documentación
-- [ ] Desplegar Backend (Railway/Render).
-- [ ] Desplegar Frontend (Vercel).
-- [ ] Configurar variables de entorno en producción.
-- [ ] Documentar API con Swagger y entregar manual de usuario.
+| Tabla | Descripción |
+|---|---|
+| **Users** | Usuarios del sistema (`id`, `nombre`, `apellido`, `email`, `password`, `rol`) |
+| **Profiles** | Perfil técnico (`id`, `user_id`, `resumen`, `semestre`, `modalidad_preferida`, `github_url`, `linkedin_url`) |
+| **Skills** | Catálogo de tecnologías (`id`, `nombre`, `categoria`) |
+| **Student_Skills** | Relación Usuario-Habilidad (`student_id`, `skill_id`, `nivel`) |
+| **Jobs** | Vacantes sincronizadas (`id`, `external_id`, `titulo`, `empresa`, `descripcion`, `ubicacion`, `url_postulacion`) |
+| **Match_Results** | Resultados de análisis (`id`, `student_id`, `job_id`, `score`, `justificacion_ia`, `missing_skills`) |
 
 ---
 
-## Flujo de la App
-1. Estudiante: Registro -> Login -> Completar Perfil (Skills/Nivel).
-2. Sistema: Ingestiona vacantes (JSearch) -> Ejecuta Matching (IA) -> Guarda en `Match_Results`.
-3. Estudiante: Visualiza vacantes recomendadas ordenadas por `score`.
-4. Admin: Visualiza estadísticas de empleabilidad.
+## 💻 Instalación y Configuración Local
+
+### 1. Clonar el repositorio e instalar dependencias
+```bash
+git clone https://github.com/Williamp0403/Find-Matching-Jobs.git
+cd Find-Matching-Jobs
+pnpm install
+```
+
+### 2. Compilar paquete de tipos compartidos
+```bash
+pnpm --filter @find-matching-jobs/types build
+```
+
+### 3. Migraciones e Inicio en Desarrollo
+```bash
+# Migraciones de base de datos
+cd apps/backend
+pnpm run db:create
+pnpm run migration:run
+
+# Iniciar proyectos en desarrollo
+cd ../..
+pnpm --filter backend start:dev & pnpm --filter frontend dev
+```
+
+- **Frontend**: `http://localhost:3001`
+- **Backend API**: `http://localhost:3000`
 
 ---
 
-## Referencias
-- NestJS: https://docs.nestjs.com/
-- NextJS: https://nextjs.org/docs
-- JSearch API: https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch
-- TypeORM: https://typeorm.io/
+## 🔑 Variables de Entorno
+
+### Backend (`apps/backend/.env`)
+```env
+PORT=3000
+DATABASE_URL=postgresql://usuario:password@host:5432/dbname?sslmode=require
+JWT_SECRET=tu_secreto_super_seguro
+JSEARCH_API_KEY=tu_api_key_de_rapidapi
+FRONTEND_URL=http://localhost:3001
+CRON_SECRET=tu_clave_secreta_para_cron
+```
+
+### Frontend (`apps/frontend/.env.local`)
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3000
+```
