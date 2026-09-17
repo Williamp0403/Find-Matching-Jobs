@@ -23,7 +23,6 @@ import { JobsFilterDto } from './dto/jobs-filter.dto';
 
 @Controller('jobs')
 @ApiTags('jobs')
-@UseGuards(JwtAuthGuard)
 export class JobsController {
   constructor(
     private readonly jobsService: JobsService,
@@ -32,11 +31,13 @@ export class JobsController {
   ) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   findAll(@Query() query: JobsFilterDto) {
     return this.jobsService.findAll(query);
   }
 
   @Get('search')
+  @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Buscar vacantes en DB local' })
   searchLocal(@Query() searchDto: SearchJobsDto) {
     return this.jobsService.search(
@@ -61,7 +62,6 @@ export class JobsController {
 
   @Get('cron-sync')
   @Post('cron-sync')
-  @UseGuards() // Sobrescribe el guard a nivel de controlador: sin JWT
   @ApiOperation({ summary: 'Vercel Cron: sincronización semanal de vacantes' })
   async cronSync(
     @Headers('authorization') authHeader?: string,
@@ -81,6 +81,7 @@ export class JobsController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   findOne(
     @Param('id', ParseIntPipe) id: number,
     @CurrentUser() user: JwtPayload,
