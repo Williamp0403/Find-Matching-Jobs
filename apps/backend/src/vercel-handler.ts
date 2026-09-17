@@ -12,7 +12,6 @@ import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 let cachedApp: any;
-let cachedHandler: any;
 
 async function bootstrapServerless() {
   if (!cachedApp) {
@@ -69,17 +68,13 @@ async function bootstrapServerless() {
     );
 
     await app.init();
-    cachedApp = app;
+    cachedApp = app.getHttpAdapter().getInstance();
   }
 
-  if (!cachedHandler) {
-    cachedHandler = serverless(cachedApp.getHttpAdapter().getInstance());
-  }
-
-  return cachedHandler;
+  return cachedApp;
 }
 
-export const handler = async (event: any, context: any) => {
-  const h = await bootstrapServerless();
-  return h(event, context);
+export const handler = async (req: any, res: any) => {
+  const expressApp = await bootstrapServerless();
+  return expressApp(req, res);
 };
