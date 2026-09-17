@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npx nest build",
+  "buildCommand": "pnpm --filter @find-matching-jobs/types build && npx nest build",
   "installCommand": "pnpm install",
   "functions": {
     "api/index.js": {
